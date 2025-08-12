@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Joel Games</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
+    header {
+      background-color: #333;
+      color: white;
+      padding: 20px;
+      font-size: 1.8em;
+    }
+    nav {
+      margin: 10px 0;
+    }
+    nav button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    .game {
+      display: none;
+      padding: 20px;
+    }
+    .active {
+      display: block;
+    }
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      grid-gap: 10px;
+      justify-content: center;
+    }
+    .card {
+      width: 60px;
+      height: 60px;
+      background: #ccc;
+      font-size: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    @media (max-width: 600px) {
+      .memory-grid {
+        grid-template-columns: repeat(2, 60px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>Joel Games</header>
+
+  <nav>
+    <button onclick="showGame('clicker')">Joel's Click Challenge</button>
+    <button onclick="showGame('guess')">Joel's Number Guess</button>
+    <button onclick="showGame('memory')">Joel's Memory Match</button>
+  </nav>
+
+  <!-- Clicker Game -->
+  <div id="clicker" class="game">
+    <h2>Joel's Click Challenge</h2>
+    <p>Click as many times as you can in 10 seconds!</p>
+    <button id="clickBtn">Click Me!</button>
+    <p>Score: <span id="clickCount">0</span></p>
+    <p>Time Left: <span id="timeLeft">10</span> seconds</p>
+  </div>
+
+  <!-- Number Guessing Game -->
+  <div id="guess" class="game">
+    <h2>Joel's Number Guess</h2>
+    <p>Guess a number between 1 and 100</p>
+    <input type="number" id="guessInput" />
+    <button onclick="checkGuess()">Guess</button>
+    <p id="guessFeedback"></p>
+  </div>
+
+  <!-- Memory Game -->
+  <div id="memory" class="game">
+    <h2>Joel's Memory Match</h2>
+    <div class="memory-grid" id="memoryGrid"></div>
+  </div>
+
+  <script>
+    // Navigation
+    function showGame(id) {
+      document.querySelectorAll('.game').forEach(g => g.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+    showGame('clicker');
+
+    // Clicker Game
+    let clickCount = 0;
+    let timeLeft = 10;
+    let clickTimer;
+    document.getElementById('clickBtn').onclick = () => {
+      if (timeLeft === 10 && clickCount === 0) {
+        clickTimer = setInterval(() => {
+          timeLeft--;
+          document.getElementById('timeLeft').textContent = timeLeft;
+          if (timeLeft <= 0) {
+            clearInterval(clickTimer);
+            alert('Time’s up! Your score is ' + clickCount);
+            clickCount = 0;
+            timeLeft = 10;
+            document.getElementById('clickCount').textContent = '0';
+            document.getElementById('timeLeft').textContent = '10';
+          }
+        }, 1000);
+      }
+      if (timeLeft > 0) {
+        clickCount++;
+        document.getElementById('clickCount').textContent = clickCount;
+      }
+    };
+
+    // Number Guessing Game
+    let secretNumber = Math.floor(Math.random() * 100) + 1;
+    function checkGuess() {
+      const guess = parseInt(document.getElementById('guessInput').value);
+      const feedback = document.getElementById('guessFeedback');
+      if (isNaN(guess)) {
+        feedback.textContent = "Please enter a valid number.";
+      } else if (guess < secretNumber) {
+        feedback.textContent = "Too low!";
+      } else if (guess > secretNumber) {
+        feedback.textContent = "Too high!";
+      } else {
+        feedback.textContent = "Correct! Starting new game...";
+        secretNumber = Math.floor(Math.random() * 100) + 1;
+      }
+    }
+
+    // Memory Game
+    const emojis = ['🐶','🐱','🐶','🐱','🐸','🐵','🐸','🐵'];
+    let shuffled = [];
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+
+    function shuffle(array) {
+      return array.sort(() => 0.5 - Math.random());
+    }
+
+    function createMemoryGame() {
+      shuffled = shuffle([...emojis]);
+      const grid = document.getElementById('memoryGrid');
+      grid.innerHTML = '';
+      shuffled.forEach((emoji, index) => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.emoji = emoji;
+        card.dataset.index = index;
+        card.onclick = () => flipCard(card);
+        grid.appendChild(card);
+      });
+    }
+
+    function flipCard(card) {
+      if (lockBoard || card.classList.contains('matched') || card === firstCard) return;
+
+      card.textContent = card.dataset.emoji;
+
+      if (!firstCard) {
+        firstCard = card;
+        return;
+      }
+
+      secondCard = card;
+      lockBoard = true;
+
+      if (firstCard.dataset.emoji === secondCard.dataset.emoji) {
+        firstCard.classList.add('matched');
+        secondCard.classList.add('matched');
+        resetCards();
+      } else {
+        setTimeout(() => {
+          firstCard.textContent = '';
+          secondCard.textContent = '';
+          resetCards();
+        }, 800);
+      }
+    }
+
+    function resetCards() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    createMemoryGame();
+  </script>
+</body>
+</html>
